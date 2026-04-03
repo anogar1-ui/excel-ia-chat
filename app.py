@@ -730,42 +730,47 @@ def procesar_mensaje_ia(mensaje: str) -> tuple[str, bool]:
 # ============================================================================
 with st.sidebar:
     st.header("📂 Cargar Archivo")
-    
+
     archivo = st.file_uploader(
         "Selecciona un archivo Excel",
-        type=['xlsx', 'xls'],
-        help="Arrastra o haz clic para cargar"
+        # Sin filtro 'type' para compatibilidad con Android (Chrome móvil puede bloquear xlsx)
+        help="Formatos soportados: .xlsx, .xls — En Android selecciona desde 'Todos los archivos'"
     )
-    
+
     # Solo cargar si es un archivo NUEVO (diferente al ya cargado)
     if archivo is not None:
-        # Verificar si es un archivo diferente al actual
-        archivo_nuevo = st.session_state.filename != archivo.name
-        
-        if archivo_nuevo:
-            try:
-                df_nuevo = pd.read_excel(archivo)
-                # Auto-convertir columnas que parecen numéricas
-                for col in df_nuevo.columns:
-                    if df_nuevo[col].dtype == object or str(df_nuevo[col].dtype) == 'string':
-                        # Intentar convertir a numérico (comas como decimales también)
-                        try:
-                            converted = df_nuevo[col].astype(str).str.replace(',', '.', regex=False)
-                            converted = pd.to_numeric(converted, errors='coerce')
-                            # Si al menos el 50% de los valores no vacíos son numéricos, convertir
-                            non_null = df_nuevo[col].dropna()
-                            if len(non_null) > 0:
-                                num_valid = converted.dropna().count()
-                                if num_valid / len(non_null) >= 0.5:
-                                    df_nuevo[col] = converted
-                        except Exception:
-                            pass
-                st.session_state.df = df_nuevo
-                st.session_state.filename = archivo.name
-                st.session_state.chat_history = []  # Limpiar historial al cargar nuevo
-                st.success(f"✅ Cargado: {archivo.name}")
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+        # Validar extensión manualmente (compatible con Android)
+        nombre_lower = archivo.name.lower()
+        if not (nombre_lower.endswith('.xlsx') or nombre_lower.endswith('.xls')):
+            st.error(f"❌ El archivo '{archivo.name}' no es un Excel válido. Sube un archivo .xlsx o .xls")
+        else:
+            # Verificar si es un archivo diferente al actual
+            archivo_nuevo = st.session_state.filename != archivo.name
+
+            if archivo_nuevo:
+                try:
+                    df_nuevo = pd.read_excel(archivo)
+                    # Auto-convertir columnas que parecen numéricas
+                    for col in df_nuevo.columns:
+                        if df_nuevo[col].dtype == object or str(df_nuevo[col].dtype) == 'string':
+                            # Intentar convertir a numérico (comas como decimales también)
+                            try:
+                                converted = df_nuevo[col].astype(str).str.replace(',', '.', regex=False)
+                                converted = pd.to_numeric(converted, errors='coerce')
+                                # Si al menos el 50% de los valores no vacíos son numéricos, convertir
+                                non_null = df_nuevo[col].dropna()
+                                if len(non_null) > 0:
+                                    num_valid = converted.dropna().count()
+                                    if num_valid / len(non_null) >= 0.5:
+                                        df_nuevo[col] = converted
+                            except Exception:
+                                pass
+                    st.session_state.df = df_nuevo
+                    st.session_state.filename = archivo.name
+                    st.session_state.chat_history = []  # Limpiar historial al cargar nuevo
+                    st.success(f"✅ Cargado: {archivo.name}")
+                except Exception as e:
+                    st.error(f"❌ Error al leer el archivo: {str(e)}")
     
     # Selector de proveedor IA
     st.divider()
