@@ -733,16 +733,34 @@ with st.sidebar:
 
     archivo = st.file_uploader(
         "Selecciona un archivo Excel",
-        # Sin filtro 'type' para compatibilidad con Android (Chrome móvil puede bloquear xlsx)
-        help="Formatos soportados: .xlsx, .xls — En Android selecciona desde 'Todos los archivos'"
+        # Sin filtro 'type' para compatibilidad con Android/pCloud (el nombre puede no tener extensión)
+        help="Formatos: .xlsx, .xls — Desde pCloud u otras nubes en Android, abre primero la app pCloud y 'Compartir' el archivo"
     )
 
     # Solo cargar si es un archivo NUEVO (diferente al ya cargado)
     if archivo is not None:
-        # Validar extensión manualmente (compatible con Android)
         nombre_lower = archivo.name.lower()
-        if not (nombre_lower.endswith('.xlsx') or nombre_lower.endswith('.xls')):
-            st.error(f"❌ El archivo '{archivo.name}' no es un Excel válido. Sube un archivo .xlsx o .xls")
+
+        # MIME types válidos para Excel (pCloud y otras apps pueden omitir la extensión)
+        MIME_EXCEL = {
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',  # xlsx
+            'application/vnd.ms-excel',                                            # xls
+            'application/msexcel',
+            'application/x-msexcel',
+            'application/octet-stream',  # genérico (pCloud a veces lo usa)
+        }
+
+        # Validar: extensión correcta O tipo MIME reconocido como Excel
+        tiene_extension_excel = nombre_lower.endswith('.xlsx') or nombre_lower.endswith('.xls')
+        tiene_mime_excel = archivo.type in MIME_EXCEL
+
+        es_excel_valido = tiene_extension_excel or tiene_mime_excel
+
+        if not es_excel_valido:
+            st.error(f"❌ No se reconoce como Excel.")
+            st.caption(f"📄 Nombre: `{archivo.name}`")
+            st.caption(f"📎 Tipo detectado: `{archivo.type}`")
+            st.caption("💡 Si viene de pCloud, intenta descargarlo primero a la tablet y luego súbelo desde ahí.")
         else:
             # Verificar si es un archivo diferente al actual
             archivo_nuevo = st.session_state.filename != archivo.name
@@ -753,11 +771,9 @@ with st.sidebar:
                     # Auto-convertir columnas que parecen numéricas
                     for col in df_nuevo.columns:
                         if df_nuevo[col].dtype == object or str(df_nuevo[col].dtype) == 'string':
-                            # Intentar convertir a numérico (comas como decimales también)
                             try:
                                 converted = df_nuevo[col].astype(str).str.replace(',', '.', regex=False)
                                 converted = pd.to_numeric(converted, errors='coerce')
-                                # Si al menos el 50% de los valores no vacíos son numéricos, convertir
                                 non_null = df_nuevo[col].dropna()
                                 if len(non_null) > 0:
                                     num_valid = converted.dropna().count()
@@ -767,10 +783,12 @@ with st.sidebar:
                                 pass
                     st.session_state.df = df_nuevo
                     st.session_state.filename = archivo.name
-                    st.session_state.chat_history = []  # Limpiar historial al cargar nuevo
+                    st.session_state.chat_history = []
                     st.success(f"✅ Cargado: {archivo.name}")
                 except Exception as e:
                     st.error(f"❌ Error al leer el archivo: {str(e)}")
+                    st.caption(f"📄 Nombre: `{archivo.name}` | Tipo: `{archivo.type}`")
+                    st.caption("💡 Tip: Si viene de pCloud, descarga el archivo a la tablet primero.")
     
     # Selector de proveedor IA
     st.divider()
