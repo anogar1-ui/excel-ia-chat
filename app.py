@@ -17,6 +17,17 @@ import json
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
+# Compatibilidad con Streamlit Cloud secrets
+def get_env(key, default=""):
+    """Lee variable de entorno desde .env o st.secrets (Streamlit Cloud)"""
+    val = os.getenv(key, "")
+    if not val:
+        try:
+            val = st.secrets.get(key, default)
+        except Exception:
+            val = default
+    return val
+
 # ============================================================================
 # CONFIGURACIÓN DE LA PÁGINA
 # ============================================================================
@@ -107,12 +118,12 @@ def check_ollama():
 
 def check_gemini():
     """Verifica si Gemini está configurado"""
-    api_key = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
+    api_key = get_env("GEMINI_API_KEY", "") or get_env("GOOGLE_API_KEY", "")
     return len(api_key) > 10 and api_key != "tu_api_key_aqui"
 
 def check_claude():
     """Verifica si Claude está configurado"""
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    api_key = get_env("ANTHROPIC_API_KEY", "")
     return len(api_key) > 10
 
 st.session_state.ollama_available = check_ollama()
@@ -353,7 +364,7 @@ def chat_ollama(mensaje: str, historial: list) -> str:
     try:
         import ollama
         
-        modelo = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+        modelo = get_env("OLLAMA_MODEL", "qwen2.5:3b")
         contexto = obtener_contexto_df()
         
         messages = [
@@ -380,10 +391,10 @@ def chat_gemini(mensaje: str, historial: list) -> str:
     try:
         from google import genai
 
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        api_key = get_env("GEMINI_API_KEY") or get_env("GOOGLE_API_KEY")
         client = genai.Client(api_key=api_key)
 
-        modelo = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        modelo = get_env("GEMINI_MODEL", "gemini-2.5-flash")
         contexto = obtener_contexto_df()
         system_prompt = crear_system_prompt()
 
@@ -416,10 +427,10 @@ def chat_claude(mensaje: str, historial: list) -> str:
     try:
         import anthropic
 
-        api_key = os.getenv("ANTHROPIC_API_KEY")
+        api_key = get_env("ANTHROPIC_API_KEY")
         client = anthropic.Anthropic(api_key=api_key)
 
-        modelo = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+        modelo = get_env("CLAUDE_MODEL", "claude-sonnet-4-20250514")
         contexto = obtener_contexto_df()
         system_prompt = crear_system_prompt()
 
