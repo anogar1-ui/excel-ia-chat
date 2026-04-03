@@ -1,0 +1,32 @@
+'==============================================================================
+' INSTRUCCIONES DE INSTALACIÓN - Excel + Ollama
+'==============================================================================
+'
+' PASO 1: Ejecutar "run_excel_api.bat" (inicia el servidor)
+'
+' PASO 2: En Excel, importar el módulo VBA:
+'   1. Abre tu archivo Excel y guárdalo como .xlsm (con macros)
+'   2. Presiona Alt+F11 (abre el editor VBA)
+'   3. En el menú: Archivo → Importar archivo...
+'   4. Selecciona el archivo "ExcelOllama.bas"
+'   5. Cierra el editor VBA (Alt+Q)
+'
+' PASO 3: Habilitar acceso al modelo de objetos VBA:
+'   1. Archivo → Opciones → Centro de confianza
+'   2. Configuración del Centro de confianza
+'   3. Configuración de macros
+'   4. Marcar: "Confiar en el acceso al modelo de objetos de proyectos VBA"
+'
+' PASO 4: Usar la extensión:
+'   - Presiona Alt+F8
+'   - Selecciona "MostrarChatOllama"
+'   - Clic en "Ejecutar"
+'   - ¡Escribe instrucciones en lenguaje natural!
+'
+' OPCIONAL: Crear botón en la cinta
+'   - Clic derecho en la cinta de Excel
+'   - "Personalizar cinta de opciones"
+'   - Crear nuevo grupo
+'   - Agregar macro "MostrarChatOllama"
+'
+'==============================================================================

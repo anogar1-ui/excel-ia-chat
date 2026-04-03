@@ -1,0 +1,60 @@
+==============================================================================
+ DESPLIEGUE EN LA NUBE - Gestor de Excel con IA
+ Para usar desde iPad / Android / cualquier navegador
+==============================================================================
+
+ OPCION 1: STREAMLIT CLOUD (Gratis y facil)
+ -------------------------------------------
+ 1. Sube el proyecto a GitHub (repositorio privado)
+ 2. Ve a https://share.streamlit.io
+ 3. Conecta tu cuenta de GitHub
+ 4. Selecciona el repositorio y app.py
+ 5. En "Advanced settings", anade las variables de entorno:
+      GEMINI_API_KEY=AIza...
+      ANTHROPIC_API_KEY=sk-ant-...
+ 6. Click en "Deploy"
+ 7. Te da una URL publica (ej: https://tuapp.streamlit.app)
+
+ OPCION 2: RAILWAY (Facil, gratis con limites)
+ ----------------------------------------------
+ 1. Ve a https://railway.app
+ 2. Conecta con GitHub
+ 3. Selecciona el repositorio
+ 4. Railway detecta el Procfile automaticamente
+ 5. En Settings > Variables, anade:
+      GEMINI_API_KEY=AIza...
+      ANTHROPIC_API_KEY=sk-ant-...
+ 6. Deploy automatico
+
+ OPCION 3: RENDER (Gratis con limites)
+ --------------------------------------
+ 1. Ve a https://render.com
+ 2. New Web Service > conecta GitHub
+ 3. Build Command: pip install -r requirements_cloud.txt
+ 4. Start Command: streamlit run app.py --server.port $PORT --server.headless true
+ 5. Environment variables:
+      GEMINI_API_KEY=AIza...
+      ANTHROPIC_API_KEY=sk-ant-...
+
+==============================================================================
+ USO DESDE IPAD / ANDROID
+==============================================================================
+
+ Una vez desplegado, simplemente:
+ 1. Abre Safari / Chrome en tu iPad o Android
+ 2. Ve a la URL de tu app (ej: https://tuapp.streamlit.app)
+ 3. Sube un archivo Excel
+ 4. Usa el chat con IA para modificarlo
+ 5. Descarga el Excel modificado
+ 6. Abrelo en Excel para iPad/Android
+
+==============================================================================
+ NOTAS
+==============================================================================
+
+ - requirements_cloud.txt NO incluye ollama (no funciona en la nube)
+ - En la nube usa Gemini o Claude como proveedor de IA
+ - El archivo .env NO se sube a la nube, usa variables de entorno del servicio
+ - Streamlit Cloud es la opcion mas facil para empezar
+
+==============================================================================

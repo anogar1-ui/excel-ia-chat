@@ -1,0 +1,11 @@
+{
+  "name": "excel-ia-chat-addin",
+  "version": "1.0.0",
+  "description": "Office Add-in - Excel IA Chat con Claude/Gemini",
+  "scripts": {
+    "sideload": "office-addin-debugging start manifest.xml desktop --app excel",
+    "stop": "office-addin-debugging stop manifest.xml"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

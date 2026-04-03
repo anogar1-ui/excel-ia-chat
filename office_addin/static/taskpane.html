@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Excel IA Chat</title>
+
+    <!-- Office.js - REQUERIDO para Office Add-ins -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <link rel="stylesheet" href="taskpane.css"/>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <div class="header">
+            <h1>Excel IA Chat</h1>
+            <div id="status-badge" class="badge badge-loading">Conectando...</div>
+        </div>
+
+        <!-- Mensajes del chat -->
+        <div id="chat-container" class="chat-container">
+            <div class="message bot-message">
+                <div class="message-content">
+                    Hola! Soy tu asistente de Excel con IA. Escribe instrucciones en lenguaje natural y modificaré tu hoja de cálculo.
+                    <br/><br/>
+                    <strong>Ejemplos:</strong>
+                    <ul>
+                        <li>Suma 10 a la columna Precio</li>
+                        <li>Ordena por la columna A</li>
+                        <li>Colorea en verde las filas donde Ventas > 1000</li>
+                        <li>Crea un gráfico de barras</li>
+                        <li>Añade una columna Total = Precio × Cantidad</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input area -->
+        <div class="input-area">
+            <div class="input-row">
+                <textarea
+                    id="user-input"
+                    placeholder="Escribe una instrucción..."
+                    rows="2"
+                ></textarea>
+                <button id="send-btn" onclick="enviarMensaje()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-footer">
+                <label class="auto-exec-label">
+                    <input type="checkbox" id="auto-execute" checked/>
+                    Ejecutar automáticamente
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="taskpane.js"></script>
+</body>
+</html>

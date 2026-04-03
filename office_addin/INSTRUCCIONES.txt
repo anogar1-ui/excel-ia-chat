@@ -1,0 +1,121 @@
+==============================================================================
+ EXCEL IA CHAT - OFFICE ADD-IN
+ Funciona en: PC, Mac, iPad, Android y Excel Web
+==============================================================================
+
+ REQUISITOS
+ ----------
+ - Python 3.8+
+ - Una API key de Claude (Anthropic) o Gemini (Google)
+ - Excel 2016+ (PC/Mac) o Excel para iPad/Android/Web
+
+==============================================================================
+ PASO 1: CONFIGURAR API KEY
+==============================================================================
+
+ Edita el archivo .env en la raíz del proyecto y añade UNA de estas:
+
+   ANTHROPIC_API_KEY=sk-ant-api03-...
+   GOOGLE_API_KEY=AIza...
+
+ (Si tienes las dos, se usa Claude por defecto. Puedes forzar con:
+  ADDIN_IA_PROVIDER=gemini)
+
+==============================================================================
+ PASO 2: GENERAR CERTIFICADOS SSL
+==============================================================================
+
+ Los Office Add-ins requieren HTTPS. Ejecuta:
+
+   cd office_addin
+   python generate_certs.py
+
+ Luego instala el certificado para que Excel confíe en él:
+   - Windows: certutil -addstore -user "Root" "certs\server.crt"
+   - Mac: Abrir certs/server.crt > Llavero > Confiar siempre
+
+==============================================================================
+ PASO 3: INICIAR EL SERVIDOR
+==============================================================================
+
+ Windows:
+   Doble clic en run_addin.bat
+
+ O manualmente:
+   cd office_addin
+   pip install -r requirements.txt
+   python server.py
+
+ El servidor arranca en https://localhost:3000
+
+==============================================================================
+ PASO 4: INSTALAR EL ADD-IN EN EXCEL (PC/Mac)
+==============================================================================
+
+ OPCIÓN A - Sideload manual (desarrollo):
+   1. Abre Excel
+   2. Archivo > Opciones > Centro de confianza >
+      Configuración del Centro de confianza >
+      Catálogos de complementos de confianza
+   3. En "URL del catálogo", pon la carpeta del manifiesto:
+      \\ruta\completa\a\office_addin
+   4. Marca "Mostrar en el menú"
+   5. Reinicia Excel
+   6. Insertar > Mis complementos > Carpeta compartida > Excel IA Chat
+
+ OPCIÓN B - Sideload rápido (Excel 365):
+   1. Abre Excel
+   2. Insertar > Complementos > Cargar mi complemento
+   3. Selecciona: office_addin\manifest.xml
+   4. Aparecerá el botón "Chat IA" en la pestaña Inicio
+
+==============================================================================
+ PASO 5: INSTALAR EN IPAD / ANDROID
+==============================================================================
+
+ Para iPad/Android necesitas que el servidor sea accesible por internet.
+
+ OPCIÓN A - Servidor remoto (recomendado):
+   1. Despliega el servidor en Railway, Render, o un VPS
+   2. Actualiza las URLs en manifest.xml (cambia localhost:3000
+      por tu-servidor.com)
+   3. Tu administrador de Microsoft 365 debe subir el manifest.xml
+      al Admin Center > Complementos integrados
+   4. El add-in aparecerá en Excel iPad/Android automáticamente
+
+ OPCIÓN B - Túnel local (para probar):
+   1. Instala ngrok: https://ngrok.com
+   2. Ejecuta: ngrok http https://localhost:3000
+   3. Copia la URL pública (ej: https://abc123.ngrok.io)
+   4. Actualiza las URLs en manifest.xml con esa URL
+   5. Sideload el manifest en Excel Web (office.com):
+      Insertar > Complementos > Cargar mi complemento
+   6. El add-in funcionará en iPad si usas la misma cuenta
+
+==============================================================================
+ USO
+==============================================================================
+
+ 1. Haz clic en "Chat IA" en la pestaña Inicio de Excel
+ 2. Se abre un panel lateral con el chat
+ 3. Escribe instrucciones en español:
+    - "Suma 10 a la columna B"
+    - "Ordena por Precio de mayor a menor"
+    - "Colorea en rojo las filas donde Ventas < 100"
+    - "Crea un gráfico de barras con las ventas"
+    - "Añade una columna Total = Precio × Cantidad"
+ 4. La IA genera y ejecuta el código automáticamente
+
+==============================================================================
+ NOTAS
+==============================================================================
+
+ - Este add-in NO afecta a la extensión VBA existente con Ollama
+ - Ambos pueden coexistir: VBA para PC local, Add-in para todas las plataformas
+ - El add-in usa Office.js (JavaScript) en vez de VBA
+ - Si usas Claude, el modelo por defecto es claude-sonnet-4-20250514
+   (configurable con CLAUDE_MODEL en .env)
+ - Si usas Gemini, el modelo por defecto es gemini-2.0-flash
+   (configurable con GEMINI_MODEL en .env)
+
+==============================================================================
