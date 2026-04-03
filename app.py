@@ -723,6 +723,21 @@ with st.sidebar:
         if archivo_nuevo:
             try:
                 df_nuevo = pd.read_excel(archivo)
+                # Auto-convertir columnas que parecen numéricas
+                for col in df_nuevo.columns:
+                    if df_nuevo[col].dtype == object or str(df_nuevo[col].dtype) == 'string':
+                        # Intentar convertir a numérico (comas como decimales también)
+                        try:
+                            converted = df_nuevo[col].astype(str).str.replace(',', '.', regex=False)
+                            converted = pd.to_numeric(converted, errors='coerce')
+                            # Si al menos el 50% de los valores no vacíos son numéricos, convertir
+                            non_null = df_nuevo[col].dropna()
+                            if len(non_null) > 0:
+                                num_valid = converted.dropna().count()
+                                if num_valid / len(non_null) >= 0.5:
+                                    df_nuevo[col] = converted
+                        except Exception:
+                            pass
                 st.session_state.df = df_nuevo
                 st.session_state.filename = archivo.name
                 st.session_state.chat_history = []  # Limpiar historial al cargar nuevo
