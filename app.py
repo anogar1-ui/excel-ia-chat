@@ -902,380 +902,421 @@ with tab1:
 # ============================================================================
 with tab2:
     st.subheader("Aplicar Fórmulas")
-    
-    cols_numericas = obtener_columnas_numericas()
-    
-    if not cols_numericas:
-        st.warning("⚠️ No hay columnas numéricas.")
-    else:
-        col1, col2, col3 = st.columns([1, 1, 1])
-        
-        with col1:
-            operacion = st.selectbox("Operación", ["Suma", "Resta", "Multiplicación", "División", "Promedio"])
-        with col2:
-            columna_a = st.selectbox("Columna A", cols_numericas, key="col_a")
-        with col3:
-            columna_b = st.selectbox("Columna B", cols_numericas, key="col_b")
-        
-        nombre_resultado = st.text_input("Nombre columna resultado", value=f"Resultado_{operacion}")
-        
-        if st.button("➕ Aplicar Fórmula", type="primary"):
-            df = st.session_state.df
-            guardar_cambio(f"Fórmula: {columna_a} {operacion} {columna_b}")
-            
-            if operacion == "Suma":
-                df[nombre_resultado] = df[columna_a] + df[columna_b]
-            elif operacion == "Resta":
-                df[nombre_resultado] = df[columna_a] - df[columna_b]
-            elif operacion == "Multiplicación":
-                df[nombre_resultado] = df[columna_a] * df[columna_b]
-            elif operacion == "División":
-                df[nombre_resultado] = df[columna_a] / df[columna_b].replace(0, float('nan'))
-            elif operacion == "Promedio":
-                df[nombre_resultado] = (df[columna_a] + df[columna_b]) / 2
-            
-            st.session_state.df = df
-            st.success(f"✅ Columna '{nombre_resultado}' creada.")
-            st.rerun()
-    
-    # Sección de operaciones con fechas
-    st.divider()
-    st.subheader("📅 Operaciones con Fechas")
-    
-    cols_fecha = obtener_columnas_fecha()
-    
-    if not cols_fecha:
-        st.info("ℹ️ No hay columnas de fecha detectadas. Las fechas deben estar en formato datetime.")
-        st.caption("💡 Tip: Si tienes fechas como texto, la IA puede ayudarte a convertirlas.")
-    else:
-        operacion_fecha = st.selectbox(
-            "Operación con fechas",
-            ["Extraer Año", "Extraer Mes", "Extraer Día", "Extraer Día de la Semana", 
-             "Días entre dos fechas", "Añadir días", "Restar días"],
-            key="op_fecha"
-        )
-        
-        col_fecha1, col_fecha2 = st.columns(2)
-        
-        with col_fecha1:
-            columna_fecha = st.selectbox("Columna de fecha", cols_fecha, key="col_fecha_1")
-        
-        with col_fecha2:
-            if operacion_fecha == "Días entre dos fechas":
-                columna_fecha_2 = st.selectbox("Segunda fecha", cols_fecha, key="col_fecha_2")
-            elif operacion_fecha in ["Añadir días", "Restar días"]:
-                cantidad_dias = st.number_input("Cantidad de días", min_value=1, value=7, key="cant_dias")
-        
-        nombre_resultado_fecha = st.text_input(
-            "Nombre nueva columna", 
-            value=f"{operacion_fecha.replace(' ', '_')}_{columna_fecha}",
-            key="nombre_col_fecha"
-        )
-        
-        if st.button("📅 Aplicar operación", type="primary", key="btn_fecha"):
-            df = st.session_state.df
-            
-            try:
-                if operacion_fecha == "Extraer Año":
-                    df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.year
-                    guardar_cambio(f"Extraer año de '{columna_fecha}'")
-                    
-                elif operacion_fecha == "Extraer Mes":
-                    df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.month
-                    guardar_cambio(f"Extraer mes de '{columna_fecha}'")
-                    
-                elif operacion_fecha == "Extraer Día":
-                    df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.day
-                    guardar_cambio(f"Extraer día de '{columna_fecha}'")
-                    
-                elif operacion_fecha == "Extraer Día de la Semana":
-                    df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.day_name()
-                    guardar_cambio(f"Extraer día semana de '{columna_fecha}'")
-                    
-                elif operacion_fecha == "Días entre dos fechas":
-                    df[nombre_resultado_fecha] = (pd.to_datetime(df[columna_fecha_2]) - pd.to_datetime(df[columna_fecha])).dt.days
-                    guardar_cambio(f"Días entre '{columna_fecha}' y '{columna_fecha_2}'")
-                    
-                elif operacion_fecha == "Añadir días":
-                    df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]) + pd.Timedelta(days=cantidad_dias)
-                    guardar_cambio(f"Añadir {cantidad_dias} días a '{columna_fecha}'")
-                    
-                elif operacion_fecha == "Restar días":
-                    df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]) - pd.Timedelta(days=cantidad_dias)
-                    guardar_cambio(f"Restar {cantidad_dias} días a '{columna_fecha}'")
-                
+
+    # Layout dividido: controles (izquierda) | datos en tiempo real (derecha)
+    col_form_ctrl, col_form_data = st.columns([3, 2])
+
+    with col_form_ctrl:
+        cols_numericas = obtener_columnas_numericas()
+
+        if not cols_numericas:
+            st.warning("⚠️ No hay columnas numéricas.")
+        else:
+            col1, col2, col3 = st.columns([1, 1, 1])
+
+            with col1:
+                operacion = st.selectbox("Operación", ["Suma", "Resta", "Multiplicación", "División", "Promedio"])
+            with col2:
+                columna_a = st.selectbox("Columna A", cols_numericas, key="col_a")
+            with col3:
+                columna_b = st.selectbox("Columna B", cols_numericas, key="col_b")
+
+            nombre_resultado = st.text_input("Nombre columna resultado", value=f"Resultado_{operacion}")
+
+            if st.button("➕ Aplicar Fórmula", type="primary"):
+                df = st.session_state.df
+                guardar_cambio(f"Fórmula: {columna_a} {operacion} {columna_b}")
+
+                if operacion == "Suma":
+                    df[nombre_resultado] = df[columna_a] + df[columna_b]
+                elif operacion == "Resta":
+                    df[nombre_resultado] = df[columna_a] - df[columna_b]
+                elif operacion == "Multiplicación":
+                    df[nombre_resultado] = df[columna_a] * df[columna_b]
+                elif operacion == "División":
+                    df[nombre_resultado] = df[columna_a] / df[columna_b].replace(0, float('nan'))
+                elif operacion == "Promedio":
+                    df[nombre_resultado] = (df[columna_a] + df[columna_b]) / 2
+
                 st.session_state.df = df
-                st.success(f"✅ Columna '{nombre_resultado_fecha}' creada.")
+                st.success(f"✅ Columna '{nombre_resultado}' creada.")
                 st.rerun()
-                
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+
+        # Sección de operaciones con fechas
+        st.divider()
+        st.subheader("📅 Operaciones con Fechas")
+
+        cols_fecha = obtener_columnas_fecha()
+
+        if not cols_fecha:
+            st.info("ℹ️ No hay columnas de fecha detectadas. Las fechas deben estar en formato datetime.")
+            st.caption("💡 Tip: Si tienes fechas como texto, la IA puede ayudarte a convertirlas.")
+        else:
+            operacion_fecha = st.selectbox(
+                "Operación con fechas",
+                ["Extraer Año", "Extraer Mes", "Extraer Día", "Extraer Día de la Semana",
+                 "Días entre dos fechas", "Añadir días", "Restar días"],
+                key="op_fecha"
+            )
+
+            col_fecha1, col_fecha2 = st.columns(2)
+
+            with col_fecha1:
+                columna_fecha = st.selectbox("Columna de fecha", cols_fecha, key="col_fecha_1")
+
+            with col_fecha2:
+                if operacion_fecha == "Días entre dos fechas":
+                    columna_fecha_2 = st.selectbox("Segunda fecha", cols_fecha, key="col_fecha_2")
+                elif operacion_fecha in ["Añadir días", "Restar días"]:
+                    cantidad_dias = st.number_input("Cantidad de días", min_value=1, value=7, key="cant_dias")
+
+            nombre_resultado_fecha = st.text_input(
+                "Nombre nueva columna",
+                value=f"{operacion_fecha.replace(' ', '_')}_{columna_fecha}",
+                key="nombre_col_fecha"
+            )
+
+            if st.button("📅 Aplicar operación", type="primary", key="btn_fecha"):
+                df = st.session_state.df
+
+                try:
+                    if operacion_fecha == "Extraer Año":
+                        df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.year
+                        guardar_cambio(f"Extraer año de '{columna_fecha}'")
+
+                    elif operacion_fecha == "Extraer Mes":
+                        df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.month
+                        guardar_cambio(f"Extraer mes de '{columna_fecha}'")
+
+                    elif operacion_fecha == "Extraer Día":
+                        df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.day
+                        guardar_cambio(f"Extraer día de '{columna_fecha}'")
+
+                    elif operacion_fecha == "Extraer Día de la Semana":
+                        df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]).dt.day_name()
+                        guardar_cambio(f"Extraer día semana de '{columna_fecha}'")
+
+                    elif operacion_fecha == "Días entre dos fechas":
+                        df[nombre_resultado_fecha] = (pd.to_datetime(df[columna_fecha_2]) - pd.to_datetime(df[columna_fecha])).dt.days
+                        guardar_cambio(f"Días entre '{columna_fecha}' y '{columna_fecha_2}'")
+
+                    elif operacion_fecha == "Añadir días":
+                        df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]) + pd.Timedelta(days=cantidad_dias)
+                        guardar_cambio(f"Añadir {cantidad_dias} días a '{columna_fecha}'")
+
+                    elif operacion_fecha == "Restar días":
+                        df[nombre_resultado_fecha] = pd.to_datetime(df[columna_fecha]) - pd.Timedelta(days=cantidad_dias)
+                        guardar_cambio(f"Restar {cantidad_dias} días a '{columna_fecha}'")
+
+                    st.session_state.df = df
+                    st.success(f"✅ Columna '{nombre_resultado_fecha}' creada.")
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+
+    # Columna derecha: datos en tiempo real
+    with col_form_data:
+        st.markdown("#### 📊 Datos en Tiempo Real")
+        m1, m2 = st.columns(2)
+        m1.metric("Filas", len(st.session_state.df))
+        m2.metric("Columnas", len(st.session_state.df.columns))
+        st.dataframe(st.session_state.df, use_container_width=True, height=480)
+        nombre_archivo_f = st.session_state.filename.replace('.xlsx', '_modificado.xlsx') if st.session_state.filename else 'datos_modificados.xlsx'
+        st.download_button(
+            "📥 Exportar Excel Modificado",
+            data=exportar_excel(),
+            file_name=nombre_archivo_f,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key=f"dl_form_{len(st.session_state.df.columns)}_{len(st.session_state.df)}",
+            use_container_width=True
+        )
 
 # ============================================================================
 # PESTAÑA 3: GRÁFICOS AVANZADOS
 # ============================================================================
 with tab3:
     st.subheader("📊 Generador de Gráficos Avanzado")
-    
-    todas_columnas = obtener_todas_columnas()
-    cols_numericas = obtener_columnas_numericas()
-    cols_fecha = obtener_columnas_fecha()
-    
-    # Categorías de gráficos
-    TIPOS_GRAFICOS = {
-        "📊 Básicos": ["Barras", "Barras Horizontales", "Líneas", "Área", "Dispersión"],
-        "📈 Comparación": ["Barras Agrupadas", "Barras Apiladas", "Área Apilada"],
-        "🥧 Distribución": ["Pastel", "Anillo (Donut)", "Histograma", "Boxplot"],
-        "🔥 Avanzados": ["Heatmap (Correlación)", "Treemap", "Radar", "Embudo", "Cascada"],
-        "📅 Temporal": ["Serie Temporal"] if cols_fecha else []
-    }
-    
-    # Aplanar opciones
-    opciones_tipo = []
-    for categoria, tipos in TIPOS_GRAFICOS.items():
-        if tipos:
-            opciones_tipo.extend(tipos)
-    
-    # Layout de controles
-    col_tipo, col_config = st.columns([1, 2])
-    
-    with col_tipo:
-        tipo_grafico = st.selectbox("Tipo de gráfico", opciones_tipo, key="tipo_graf")
-        
-        # Paletas de colores
-        paletas = {
-            "Plotly": px.colors.qualitative.Plotly,
-            "Vibrante": px.colors.qualitative.Vivid,
-            "Pastel": px.colors.qualitative.Pastel,
-            "Oscuro": px.colors.qualitative.Dark24,
-            "Set1": px.colors.qualitative.Set1,
-            "Safe": px.colors.qualitative.Safe,
+
+    # Layout dividido: controles (izquierda) | datos en tiempo real (derecha)
+    col_graf_ctrl, col_graf_data = st.columns([3, 2])
+
+    with col_graf_ctrl:
+        todas_columnas = obtener_todas_columnas()
+        cols_numericas = obtener_columnas_numericas()
+        cols_fecha = obtener_columnas_fecha()
+
+        # Categorías de gráficos
+        TIPOS_GRAFICOS = {
+            "📊 Básicos": ["Barras", "Barras Horizontales", "Líneas", "Área", "Dispersión"],
+            "📈 Comparación": ["Barras Agrupadas", "Barras Apiladas", "Área Apilada"],
+            "🥧 Distribución": ["Pastel", "Anillo (Donut)", "Histograma", "Boxplot"],
+            "🔥 Avanzados": ["Heatmap (Correlación)", "Treemap", "Radar", "Embudo", "Cascada"],
+            "📅 Temporal": ["Serie Temporal"] if cols_fecha else []
         }
-        paleta_nombre = st.selectbox("Paleta de colores", list(paletas.keys()))
-        paleta = paletas[paleta_nombre]
-    
-    with col_config:
-        # Configuración según tipo de gráfico
-        if tipo_grafico in ["Heatmap (Correlación)"]:
-            st.info("📌 El Heatmap muestra correlaciones entre columnas numéricas.")
-        elif tipo_grafico in ["Histograma", "Boxplot"]:
-            eje_x = st.selectbox("Columna", cols_numericas if cols_numericas else todas_columnas)
-            eje_y = None
-        elif tipo_grafico in ["Pastel", "Anillo (Donut)", "Treemap", "Embudo"]:
-            col_cat, col_val = st.columns(2)
-            with col_cat:
-                eje_x = st.selectbox("Categoría", todas_columnas)
-            with col_val:
-                eje_y = st.selectbox("Valor (opcional)", ["Conteo automático"] + cols_numericas)
-        elif tipo_grafico == "Radar":
-            eje_x = st.selectbox("Categorías", [c for c in todas_columnas if c not in cols_numericas])
-            eje_y = st.multiselect("Variables numéricas", cols_numericas, default=cols_numericas[:3] if len(cols_numericas) >= 3 else cols_numericas)
-        elif tipo_grafico == "Cascada":
-            col_cat, col_val = st.columns(2)
-            with col_cat:
-                eje_x = st.selectbox("Etiquetas", todas_columnas)
-            with col_val:
-                eje_y = st.selectbox("Valores", cols_numericas)
-        elif tipo_grafico in ["Barras Agrupadas", "Barras Apiladas", "Área Apilada"]:
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                eje_x = st.selectbox("Eje X", todas_columnas)
-            with col2:
-                eje_y = st.multiselect("Valores Y (múltiples)", cols_numericas, default=[cols_numericas[0]] if cols_numericas else [])
-            with col3:
-                if tipo_grafico != "Área Apilada":
-                    color_col = st.selectbox("Agrupar por (color)", ["Ninguno"] + [c for c in todas_columnas if c != eje_x])
-                else:
-                    color_col = "Ninguno"
-        elif tipo_grafico == "Serie Temporal":
-            col1, col2 = st.columns(2)
-            with col1:
-                eje_x = st.selectbox("Columna de Fecha", cols_fecha)
-            with col2:
-                eje_y = st.multiselect("Valores a graficar", cols_numericas, default=[cols_numericas[0]] if cols_numericas else [])
-        else:
-            col1, col2 = st.columns(2)
-            with col1:
-                eje_x = st.selectbox("Eje X", todas_columnas)
-            with col2:
-                eje_y = st.selectbox("Eje Y", cols_numericas if cols_numericas else todas_columnas)
-    
-    # Opciones de personalización
-    with st.expander("🎨 Personalización", expanded=False):
-        col_p1, col_p2, col_p3 = st.columns(3)
-        with col_p1:
-            titulo_grafico = st.text_input("Título del gráfico", value="")
-        with col_p2:
-            mostrar_leyenda = st.checkbox("Mostrar leyenda", value=True)
-        with col_p3:
-            altura_grafico = st.slider("Altura (px)", 300, 800, 500)
-    
-    # Generar gráfico
-    if st.button("📊 Generar Gráfico", type="primary", key="btn_graf_avanzado"):
-        df = st.session_state.df.copy()
-        
-        # Título automático si no se especifica
-        if not titulo_grafico:
-            if tipo_grafico == "Heatmap (Correlación)":
-                titulo_grafico = "Mapa de Correlaciones"
-            elif isinstance(eje_y, list):
-                titulo_grafico = f"{tipo_grafico}: {', '.join(eje_y)} por {eje_x}"
-            elif eje_y:
-                titulo_grafico = f"{tipo_grafico}: {eje_y} por {eje_x}"
-            else:
-                titulo_grafico = f"{tipo_grafico}: {eje_x}"
-        
-        try:
-            fig = None
-            
-            # ===== GRÁFICOS BÁSICOS =====
-            if tipo_grafico == "Barras":
-                fig = px.bar(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Barras Horizontales":
-                fig = px.bar(df, x=eje_y, y=eje_x, orientation='h', title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Líneas":
-                fig = px.line(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta, markers=True)
-            
-            elif tipo_grafico == "Área":
-                fig = px.area(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Dispersión":
-                fig = px.scatter(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            # ===== GRÁFICOS DE COMPARACIÓN =====
-            elif tipo_grafico == "Barras Agrupadas":
-                if color_col != "Ninguno":
-                    fig = px.bar(df, x=eje_x, y=eje_y[0] if len(eje_y) == 1 else eje_y, color=color_col, 
-                                barmode='group', title=titulo_grafico, color_discrete_sequence=paleta)
-                else:
-                    df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
-                    fig = px.bar(df_melt, x=eje_x, y='Valor', color='Serie', barmode='group', 
-                                title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Barras Apiladas":
-                if color_col != "Ninguno":
-                    fig = px.bar(df, x=eje_x, y=eje_y[0] if len(eje_y) == 1 else eje_y, color=color_col,
-                                barmode='stack', title=titulo_grafico, color_discrete_sequence=paleta)
-                else:
-                    df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
-                    fig = px.bar(df_melt, x=eje_x, y='Valor', color='Serie', barmode='stack',
-                                title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Área Apilada":
-                df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
-                fig = px.area(df_melt, x=eje_x, y='Valor', color='Serie', title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            # ===== GRÁFICOS DE DISTRIBUCIÓN =====
-            elif tipo_grafico == "Pastel":
-                if eje_y == "Conteo automático":
-                    conteo = df[eje_x].value_counts().reset_index()
-                    conteo.columns = [eje_x, 'Cantidad']
-                    fig = px.pie(conteo, names=eje_x, values='Cantidad', title=titulo_grafico, color_discrete_sequence=paleta)
-                else:
-                    fig = px.pie(df, names=eje_x, values=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Anillo (Donut)":
-                if eje_y == "Conteo automático":
-                    conteo = df[eje_x].value_counts().reset_index()
-                    conteo.columns = [eje_x, 'Cantidad']
-                    fig = px.pie(conteo, names=eje_x, values='Cantidad', title=titulo_grafico, hole=0.4, color_discrete_sequence=paleta)
-                else:
-                    fig = px.pie(df, names=eje_x, values=eje_y, title=titulo_grafico, hole=0.4, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Histograma":
-                fig = px.histogram(df, x=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            elif tipo_grafico == "Boxplot":
-                fig = px.box(df, y=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
-            
-            # ===== GRÁFICOS AVANZADOS =====
-            elif tipo_grafico == "Heatmap (Correlación)":
-                corr_matrix = df[cols_numericas].corr()
-                fig = px.imshow(corr_matrix, text_auto=True, title=titulo_grafico, 
-                               color_continuous_scale='RdBu_r', aspect='auto')
-            
-            elif tipo_grafico == "Treemap":
-                if eje_y == "Conteo automático":
-                    conteo = df[eje_x].value_counts().reset_index()
-                    conteo.columns = [eje_x, 'Cantidad']
-                    fig = px.treemap(conteo, path=[eje_x], values='Cantidad', title=titulo_grafico, color_discrete_sequence=paleta)
-                else:
-                    fig = px.treemap(df, path=[eje_x], values=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
-            
+
+        # Aplanar opciones
+        opciones_tipo = []
+        for categoria, tipos in TIPOS_GRAFICOS.items():
+            if tipos:
+                opciones_tipo.extend(tipos)
+
+        # Layout de controles
+        col_tipo, col_config = st.columns([1, 2])
+
+        with col_tipo:
+            tipo_grafico = st.selectbox("Tipo de gráfico", opciones_tipo, key="tipo_graf")
+
+            # Paletas de colores
+            paletas = {
+                "Plotly": px.colors.qualitative.Plotly,
+                "Vibrante": px.colors.qualitative.Vivid,
+                "Pastel": px.colors.qualitative.Pastel,
+                "Oscuro": px.colors.qualitative.Dark24,
+                "Set1": px.colors.qualitative.Set1,
+                "Safe": px.colors.qualitative.Safe,
+            }
+            paleta_nombre = st.selectbox("Paleta de colores", list(paletas.keys()))
+            paleta = paletas[paleta_nombre]
+
+        with col_config:
+            # Configuración según tipo de gráfico
+            if tipo_grafico in ["Heatmap (Correlación)"]:
+                st.info("📌 El Heatmap muestra correlaciones entre columnas numéricas.")
+            elif tipo_grafico in ["Histograma", "Boxplot"]:
+                eje_x = st.selectbox("Columna", cols_numericas if cols_numericas else todas_columnas)
+                eje_y = None
+            elif tipo_grafico in ["Pastel", "Anillo (Donut)", "Treemap", "Embudo"]:
+                col_cat, col_val = st.columns(2)
+                with col_cat:
+                    eje_x = st.selectbox("Categoría", todas_columnas)
+                with col_val:
+                    eje_y = st.selectbox("Valor (opcional)", ["Conteo automático"] + cols_numericas)
             elif tipo_grafico == "Radar":
-                if eje_y:
-                    df_radar = df.groupby(eje_x)[eje_y].mean().reset_index()
-                    fig = go.Figure()
-                    for idx, row in df_radar.iterrows():
-                        fig.add_trace(go.Scatterpolar(
-                            r=[row[col] for col in eje_y],
-                            theta=eje_y,
-                            fill='toself',
-                            name=str(row[eje_x])
-                        ))
-                    fig.update_layout(title=titulo_grafico, polar=dict(radialaxis=dict(visible=True)))
-            
-            elif tipo_grafico == "Embudo":
-                if eje_y == "Conteo automático":
-                    conteo = df[eje_x].value_counts().reset_index()
-                    conteo.columns = [eje_x, 'Cantidad']
-                    fig = px.funnel(conteo, x='Cantidad', y=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
-                else:
-                    fig = px.funnel(df, x=eje_y, y=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
-            
+                eje_x = st.selectbox("Categorías", [c for c in todas_columnas if c not in cols_numericas])
+                eje_y = st.multiselect("Variables numéricas", cols_numericas, default=cols_numericas[:3] if len(cols_numericas) >= 3 else cols_numericas)
             elif tipo_grafico == "Cascada":
-                fig = go.Figure(go.Waterfall(
-                    x=df[eje_x].tolist(),
-                    y=df[eje_y].tolist(),
-                    connector={"line": {"color": "rgb(63, 63, 63)"}},
-                ))
-                fig.update_layout(title=titulo_grafico)
-            
-            # ===== GRÁFICOS TEMPORALES =====
+                col_cat, col_val = st.columns(2)
+                with col_cat:
+                    eje_x = st.selectbox("Etiquetas", todas_columnas)
+                with col_val:
+                    eje_y = st.selectbox("Valores", cols_numericas)
+            elif tipo_grafico in ["Barras Agrupadas", "Barras Apiladas", "Área Apilada"]:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    eje_x = st.selectbox("Eje X", todas_columnas)
+                with col2:
+                    eje_y = st.multiselect("Valores Y (múltiples)", cols_numericas, default=[cols_numericas[0]] if cols_numericas else [])
+                with col3:
+                    if tipo_grafico != "Área Apilada":
+                        color_col = st.selectbox("Agrupar por (color)", ["Ninguno"] + [c for c in todas_columnas if c != eje_x])
+                    else:
+                        color_col = "Ninguno"
             elif tipo_grafico == "Serie Temporal":
-                df = df.sort_values(by=eje_x)
-                if eje_y:
-                    df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
-                    fig = px.line(df_melt, x=eje_x, y='Valor', color='Serie', title=titulo_grafico, 
-                                 markers=True, color_discrete_sequence=paleta)
-                    fig.update_xaxes(tickformat="%d/%m/%Y")
-            
-            # Aplicar estilos comunes
-            if fig:
-                fig.update_layout(
-                    template="plotly_white",
-                    font=dict(size=14),
-                    title_font=dict(size=20),
-                    height=altura_grafico,
-                    showlegend=mostrar_leyenda
-                )
-                
-                # Mostrar gráfico
-                st.plotly_chart(fig, use_container_width=True, key="grafico_principal")
-                
-                # Botón de exportación
-                col_exp1, col_exp2, col_exp3 = st.columns([1, 1, 2])
-                with col_exp1:
-                    # Exportar como HTML (interactivo)
-                    import io
-                    buffer = io.StringIO()
-                    fig.write_html(buffer)
-                    html_bytes = buffer.getvalue().encode()
-                    st.download_button(
-                        "📥 Descargar HTML",
-                        data=html_bytes,
-                        file_name=f"grafico_{tipo_grafico.replace(' ', '_')}.html",
-                        mime="text/html"
-                    )
-                with col_exp2:
-                    st.caption("💡 El HTML es interactivo como el gráfico original")
+                col1, col2 = st.columns(2)
+                with col1:
+                    eje_x = st.selectbox("Columna de Fecha", cols_fecha)
+                with col2:
+                    eje_y = st.multiselect("Valores a graficar", cols_numericas, default=[cols_numericas[0]] if cols_numericas else [])
             else:
-                st.warning("⚠️ No se pudo generar el gráfico con la configuración actual.")
-                
-        except Exception as e:
-            st.error(f"❌ Error al generar gráfico: {str(e)}")
+                col1, col2 = st.columns(2)
+                with col1:
+                    eje_x = st.selectbox("Eje X", todas_columnas)
+                with col2:
+                    eje_y = st.selectbox("Eje Y", cols_numericas if cols_numericas else todas_columnas)
+
+        # Opciones de personalización
+        with st.expander("🎨 Personalización", expanded=False):
+            col_p1, col_p2, col_p3 = st.columns(3)
+            with col_p1:
+                titulo_grafico = st.text_input("Título del gráfico", value="")
+            with col_p2:
+                mostrar_leyenda = st.checkbox("Mostrar leyenda", value=True)
+            with col_p3:
+                altura_grafico = st.slider("Altura (px)", 300, 800, 500)
+
+        # Generar gráfico
+        if st.button("📊 Generar Gráfico", type="primary", key="btn_graf_avanzado"):
+            df = st.session_state.df.copy()
+
+            # Título automático si no se especifica
+            if not titulo_grafico:
+                if tipo_grafico == "Heatmap (Correlación)":
+                    titulo_grafico = "Mapa de Correlaciones"
+                elif isinstance(eje_y, list):
+                    titulo_grafico = f"{tipo_grafico}: {', '.join(eje_y)} por {eje_x}"
+                elif eje_y:
+                    titulo_grafico = f"{tipo_grafico}: {eje_y} por {eje_x}"
+                else:
+                    titulo_grafico = f"{tipo_grafico}: {eje_x}"
+
+            try:
+                fig = None
+
+                # ===== GRÁFICOS BÁSICOS =====
+                if tipo_grafico == "Barras":
+                    fig = px.bar(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Barras Horizontales":
+                    fig = px.bar(df, x=eje_y, y=eje_x, orientation='h', title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Líneas":
+                    fig = px.line(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta, markers=True)
+
+                elif tipo_grafico == "Área":
+                    fig = px.area(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Dispersión":
+                    fig = px.scatter(df, x=eje_x, y=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                # ===== GRÁFICOS DE COMPARACIÓN =====
+                elif tipo_grafico == "Barras Agrupadas":
+                    if color_col != "Ninguno":
+                        fig = px.bar(df, x=eje_x, y=eje_y[0] if len(eje_y) == 1 else eje_y, color=color_col,
+                                    barmode='group', title=titulo_grafico, color_discrete_sequence=paleta)
+                    else:
+                        df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
+                        fig = px.bar(df_melt, x=eje_x, y='Valor', color='Serie', barmode='group',
+                                    title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Barras Apiladas":
+                    if color_col != "Ninguno":
+                        fig = px.bar(df, x=eje_x, y=eje_y[0] if len(eje_y) == 1 else eje_y, color=color_col,
+                                    barmode='stack', title=titulo_grafico, color_discrete_sequence=paleta)
+                    else:
+                        df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
+                        fig = px.bar(df_melt, x=eje_x, y='Valor', color='Serie', barmode='stack',
+                                    title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Área Apilada":
+                    df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
+                    fig = px.area(df_melt, x=eje_x, y='Valor', color='Serie', title=titulo_grafico, color_discrete_sequence=paleta)
+
+                # ===== GRÁFICOS DE DISTRIBUCIÓN =====
+                elif tipo_grafico == "Pastel":
+                    if eje_y == "Conteo automático":
+                        conteo = df[eje_x].value_counts().reset_index()
+                        conteo.columns = [eje_x, 'Cantidad']
+                        fig = px.pie(conteo, names=eje_x, values='Cantidad', title=titulo_grafico, color_discrete_sequence=paleta)
+                    else:
+                        fig = px.pie(df, names=eje_x, values=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Anillo (Donut)":
+                    if eje_y == "Conteo automático":
+                        conteo = df[eje_x].value_counts().reset_index()
+                        conteo.columns = [eje_x, 'Cantidad']
+                        fig = px.pie(conteo, names=eje_x, values='Cantidad', title=titulo_grafico, hole=0.4, color_discrete_sequence=paleta)
+                    else:
+                        fig = px.pie(df, names=eje_x, values=eje_y, title=titulo_grafico, hole=0.4, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Histograma":
+                    fig = px.histogram(df, x=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Boxplot":
+                    fig = px.box(df, y=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                # ===== GRÁFICOS AVANZADOS =====
+                elif tipo_grafico == "Heatmap (Correlación)":
+                    corr_matrix = df[cols_numericas].corr()
+                    fig = px.imshow(corr_matrix, text_auto=True, title=titulo_grafico,
+                                   color_continuous_scale='RdBu_r', aspect='auto')
+
+                elif tipo_grafico == "Treemap":
+                    if eje_y == "Conteo automático":
+                        conteo = df[eje_x].value_counts().reset_index()
+                        conteo.columns = [eje_x, 'Cantidad']
+                        fig = px.treemap(conteo, path=[eje_x], values='Cantidad', title=titulo_grafico, color_discrete_sequence=paleta)
+                    else:
+                        fig = px.treemap(df, path=[eje_x], values=eje_y, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Radar":
+                    if eje_y:
+                        df_radar = df.groupby(eje_x)[eje_y].mean().reset_index()
+                        fig = go.Figure()
+                        for idx, row in df_radar.iterrows():
+                            fig.add_trace(go.Scatterpolar(
+                                r=[row[col] for col in eje_y],
+                                theta=eje_y,
+                                fill='toself',
+                                name=str(row[eje_x])
+                            ))
+                        fig.update_layout(title=titulo_grafico, polar=dict(radialaxis=dict(visible=True)))
+
+                elif tipo_grafico == "Embudo":
+                    if eje_y == "Conteo automático":
+                        conteo = df[eje_x].value_counts().reset_index()
+                        conteo.columns = [eje_x, 'Cantidad']
+                        fig = px.funnel(conteo, x='Cantidad', y=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
+                    else:
+                        fig = px.funnel(df, x=eje_y, y=eje_x, title=titulo_grafico, color_discrete_sequence=paleta)
+
+                elif tipo_grafico == "Cascada":
+                    fig = go.Figure(go.Waterfall(
+                        x=df[eje_x].tolist(),
+                        y=df[eje_y].tolist(),
+                        connector={"line": {"color": "rgb(63, 63, 63)"}},
+                    ))
+                    fig.update_layout(title=titulo_grafico)
+
+                # ===== GRÁFICOS TEMPORALES =====
+                elif tipo_grafico == "Serie Temporal":
+                    df = df.sort_values(by=eje_x)
+                    if eje_y:
+                        df_melt = df.melt(id_vars=[eje_x], value_vars=eje_y, var_name='Serie', value_name='Valor')
+                        fig = px.line(df_melt, x=eje_x, y='Valor', color='Serie', title=titulo_grafico,
+                                     markers=True, color_discrete_sequence=paleta)
+                        fig.update_xaxes(tickformat="%d/%m/%Y")
+
+                # Aplicar estilos comunes
+                if fig:
+                    fig.update_layout(
+                        template="plotly_white",
+                        font=dict(size=14),
+                        title_font=dict(size=20),
+                        height=altura_grafico,
+                        showlegend=mostrar_leyenda
+                    )
+
+                    # Mostrar gráfico
+                    st.plotly_chart(fig, use_container_width=True, key="grafico_principal")
+
+                    # Botón de exportación
+                    col_exp1, col_exp2, col_exp3 = st.columns([1, 1, 2])
+                    with col_exp1:
+                        import io
+                        buffer = io.StringIO()
+                        fig.write_html(buffer)
+                        html_bytes = buffer.getvalue().encode()
+                        st.download_button(
+                            "📥 Descargar HTML",
+                            data=html_bytes,
+                            file_name=f"grafico_{tipo_grafico.replace(' ', '_')}.html",
+                            mime="text/html"
+                        )
+                    with col_exp2:
+                        st.caption("💡 El HTML es interactivo como el gráfico original")
+                else:
+                    st.warning("⚠️ No se pudo generar el gráfico con la configuración actual.")
+
+            except Exception as e:
+                st.error(f"❌ Error al generar gráfico: {str(e)}")
+
+    # Columna derecha: datos en tiempo real
+    with col_graf_data:
+        st.markdown("#### 📊 Datos en Tiempo Real")
+        m1, m2 = st.columns(2)
+        m1.metric("Filas", len(st.session_state.df))
+        m2.metric("Columnas", len(st.session_state.df.columns))
+        st.dataframe(st.session_state.df, use_container_width=True, height=480)
+        nombre_archivo_g = st.session_state.filename.replace('.xlsx', '_modificado.xlsx') if st.session_state.filename else 'datos_modificados.xlsx'
+        st.download_button(
+            "📥 Exportar Excel Modificado",
+            data=exportar_excel(),
+            file_name=nombre_archivo_g,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key=f"dl_graf_{len(st.session_state.df.columns)}_{len(st.session_state.df)}",
+            use_container_width=True
+        )
 
 # ============================================================================
 # PESTAÑA 4: TABLA DINÁMICA
@@ -1283,163 +1324,183 @@ with tab3:
 with tab4:
     st.subheader("🔄 Tabla Dinámica (Pivot Table)")
     st.caption("Agrupa y resume tus datos como en Excel")
-    
-    todas_columnas = obtener_todas_columnas()
-    cols_numericas = obtener_columnas_numericas()
-    cols_categoricas = [c for c in todas_columnas if c not in cols_numericas]
-    
-    # Configuración de la tabla dinámica
-    col_config1, col_config2 = st.columns(2)
-    
-    with col_config1:
-        st.markdown("**📋 Estructura**")
-        
-        # Filas (índice)
-        filas_pivot = st.multiselect(
-            "Agrupar por (Filas)",
-            todas_columnas,
-            default=[cols_categoricas[0]] if cols_categoricas else [],
-            help="Categorías para las filas de la tabla"
-        )
-        
-        # Columnas (opcional)
-        columnas_pivot = st.selectbox(
-            "Separar por (Columnas) - Opcional",
-            ["Ninguno"] + todas_columnas,
-            help="Segunda categoría para crear columnas"
-        )
-        if columnas_pivot == "Ninguno":
-            columnas_pivot = None
-    
-    with col_config2:
-        st.markdown("**📊 Valores**")
-        
-        # Valores a agregar
-        valores_pivot = st.multiselect(
-            "Columnas de valores",
-            cols_numericas if cols_numericas else todas_columnas,
-            default=[cols_numericas[0]] if cols_numericas else [],
-            help="Columnas numéricas a agregar"
-        )
-        
-        # Función de agregación
-        funciones_agg = {
-            "Suma": "sum",
-            "Promedio": "mean",
-            "Conteo": "count",
-            "Mínimo": "min",
-            "Máximo": "max",
-            "Desviación Estándar": "std",
-            "Mediana": "median"
-        }
-        funcion_agg = st.selectbox("Función de agregación", list(funciones_agg.keys()))
-    
-    # Opciones adicionales
-    with st.expander("⚙️ Opciones adicionales", expanded=False):
-        col_opt1, col_opt2, col_opt3 = st.columns(3)
-        with col_opt1:
-            mostrar_totales = st.checkbox("Mostrar totales", value=True)
-        with col_opt2:
-            rellenar_nulos = st.checkbox("Rellenar vacíos con 0", value=True)
-        with col_opt3:
-            formato_numeros = st.selectbox("Formato números", ["Normal", "2 decimales", "Enteros", "Porcentaje"])
-    
-    # Generar tabla dinámica
-    if st.button("🔄 Generar Tabla Dinámica", type="primary", key="btn_pivot"):
-        if not filas_pivot:
-            st.warning("⚠️ Selecciona al menos una columna para agrupar (Filas).")
-        elif not valores_pivot:
-            st.warning("⚠️ Selecciona al menos una columna de valores.")
-        else:
-            try:
-                df = st.session_state.df.copy()
-                
-                # Crear tabla dinámica
-                tabla_pivot = pd.pivot_table(
-                    df,
-                    values=valores_pivot,
-                    index=filas_pivot,
-                    columns=columnas_pivot,
-                    aggfunc=funciones_agg[funcion_agg],
-                    margins=mostrar_totales,
-                    margins_name="TOTAL",
-                    fill_value=0 if rellenar_nulos else None
-                )
-                
-                # Formatear números
-                if formato_numeros == "2 decimales":
-                    tabla_formateada = tabla_pivot.round(2)
-                elif formato_numeros == "Enteros":
-                    tabla_formateada = tabla_pivot.round(0).astype(int)
-                elif formato_numeros == "Porcentaje":
-                    tabla_formateada = tabla_pivot.round(4) * 100
-                else:
-                    tabla_formateada = tabla_pivot
-                
-                # Mostrar resultado
-                st.success(f"✅ Tabla generada: {len(tabla_formateada)} filas")
-                
-                # Mostrar tabla con estilo
-                st.dataframe(
-                    tabla_formateada,
-                    use_container_width=True,
-                    height=400
-                )
-                
-                # Botones de exportación
-                col_exp1, col_exp2, col_exp3 = st.columns([1, 1, 2])
-                with col_exp1:
-                    # Exportar como Excel
-                    output = BytesIO()
-                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                        tabla_formateada.to_excel(writer, sheet_name='Tabla Dinámica')
-                    output.seek(0)
-                    st.download_button(
-                        "📥 Descargar Excel",
-                        data=output,
-                        file_name="tabla_dinamica.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
-                with col_exp2:
-                    # Exportar como CSV
-                    csv_data = tabla_formateada.to_csv().encode('utf-8')
-                    st.download_button(
-                        "📥 Descargar CSV",
-                        data=csv_data,
-                        file_name="tabla_dinamica.csv",
-                        mime="text/csv"
-                    )
-                
-                # Gráfico de la tabla dinámica
-                st.divider()
-                st.markdown("**📊 Visualización**")
-                
+
+    # Layout dividido: controles (izquierda) | datos en tiempo real (derecha)
+    col_piv_ctrl, col_piv_data = st.columns([3, 2])
+
+    with col_piv_ctrl:
+        todas_columnas = obtener_todas_columnas()
+        cols_numericas = obtener_columnas_numericas()
+        cols_categoricas = [c for c in todas_columnas if c not in cols_numericas]
+
+        # Configuración de la tabla dinámica
+        col_config1, col_config2 = st.columns(2)
+
+
+        with col_config1:
+            st.markdown("**📋 Estructura**")
+
+            # Filas (índice)
+            filas_pivot = st.multiselect(
+                "Agrupar por (Filas)",
+                todas_columnas,
+                default=[cols_categoricas[0]] if cols_categoricas else [],
+                help="Categorías para las filas de la tabla"
+            )
+
+            # Columnas (opcional)
+            columnas_pivot = st.selectbox(
+                "Separar por (Columnas) - Opcional",
+                ["Ninguno"] + todas_columnas,
+                help="Segunda categoría para crear columnas"
+            )
+            if columnas_pivot == "Ninguno":
+                columnas_pivot = None
+
+        with col_config2:
+            st.markdown("**📊 Valores**")
+
+            # Valores a agregar
+            valores_pivot = st.multiselect(
+                "Columnas de valores",
+                cols_numericas if cols_numericas else todas_columnas,
+                default=[cols_numericas[0]] if cols_numericas else [],
+                help="Columnas numéricas a agregar"
+            )
+
+            # Función de agregación
+            funciones_agg = {
+                "Suma": "sum",
+                "Promedio": "mean",
+                "Conteo": "count",
+                "Mínimo": "min",
+                "Máximo": "max",
+                "Desviación Estándar": "std",
+                "Mediana": "median"
+            }
+            funcion_agg = st.selectbox("Función de agregación", list(funciones_agg.keys()))
+
+        # Opciones adicionales
+        with st.expander("⚙️ Opciones adicionales", expanded=False):
+            col_opt1, col_opt2, col_opt3 = st.columns(3)
+            with col_opt1:
+                mostrar_totales = st.checkbox("Mostrar totales", value=True)
+            with col_opt2:
+                rellenar_nulos = st.checkbox("Rellenar vacíos con 0", value=True)
+            with col_opt3:
+                formato_numeros = st.selectbox("Formato números", ["Normal", "2 decimales", "Enteros", "Porcentaje"])
+
+        # Generar tabla dinámica
+        if st.button("🔄 Generar Tabla Dinámica", type="primary", key="btn_pivot"):
+            if not filas_pivot:
+                st.warning("⚠️ Selecciona al menos una columna para agrupar (Filas).")
+            elif not valores_pivot:
+                st.warning("⚠️ Selecciona al menos una columna de valores.")
+            else:
                 try:
-                    if columnas_pivot:
-                        # Si hay columnas, hacer gráfico apilado
-                        fig = px.bar(
-                            tabla_formateada.reset_index(),
-                            x=filas_pivot[0] if len(filas_pivot) == 1 else tabla_formateada.reset_index().columns[0],
-                            y=tabla_formateada.columns.tolist()[:10],  # Limitar a 10 series
-                            barmode='group',
-                            title=f"{funcion_agg} de {', '.join(valores_pivot)}"
-                        )
+                    df = st.session_state.df.copy()
+
+                    # Crear tabla dinámica
+                    tabla_pivot = pd.pivot_table(
+                        df,
+                        values=valores_pivot,
+                        index=filas_pivot,
+                        columns=columnas_pivot,
+                        aggfunc=funciones_agg[funcion_agg],
+                        margins=mostrar_totales,
+                        margins_name="TOTAL",
+                        fill_value=0 if rellenar_nulos else None
+                    )
+
+                    # Formatear números
+                    if formato_numeros == "2 decimales":
+                        tabla_formateada = tabla_pivot.round(2)
+                    elif formato_numeros == "Enteros":
+                        tabla_formateada = tabla_pivot.round(0).astype(int)
+                    elif formato_numeros == "Porcentaje":
+                        tabla_formateada = tabla_pivot.round(4) * 100
                     else:
-                        # Gráfico simple
-                        fig = px.bar(
-                            tabla_formateada.reset_index(),
-                            x=filas_pivot[0] if len(filas_pivot) == 1 else tabla_formateada.reset_index().columns[0],
-                            y=valores_pivot[0] if len(valores_pivot) == 1 else valores_pivot,
-                            title=f"{funcion_agg} de {', '.join(valores_pivot)}"
+                        tabla_formateada = tabla_pivot
+
+                    # Mostrar resultado
+                    st.success(f"✅ Tabla generada: {len(tabla_formateada)} filas")
+
+                    # Mostrar tabla con estilo
+                    st.dataframe(
+                        tabla_formateada,
+                        use_container_width=True,
+                        height=400
+                    )
+
+                    # Botones de exportación
+                    col_exp1, col_exp2, col_exp3 = st.columns([1, 1, 2])
+                    with col_exp1:
+                        # Exportar como Excel
+                        output = BytesIO()
+                        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                            tabla_formateada.to_excel(writer, sheet_name='Tabla Dinámica')
+                        output.seek(0)
+                        st.download_button(
+                            "📥 Descargar Excel",
+                            data=output,
+                            file_name="tabla_dinamica.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
-                    
-                    fig.update_layout(template="plotly_white", height=400)
-                    st.plotly_chart(fig, use_container_width=True)
-                except:
-                    st.caption("💡 No se pudo generar el gráfico automático.")
-                    
-            except Exception as e:
-                st.error(f"❌ Error al generar tabla: {str(e)}")
+                    with col_exp2:
+                        # Exportar como CSV
+                        csv_data = tabla_formateada.to_csv().encode('utf-8')
+                        st.download_button(
+                            "📥 Descargar CSV",
+                            data=csv_data,
+                            file_name="tabla_dinamica.csv",
+                            mime="text/csv"
+                        )
+
+                    # Gráfico de la tabla dinámica
+                    st.divider()
+                    st.markdown("**📊 Visualización**")
+
+                    try:
+                        if columnas_pivot:
+                            fig = px.bar(
+                                tabla_formateada.reset_index(),
+                                x=filas_pivot[0] if len(filas_pivot) == 1 else tabla_formateada.reset_index().columns[0],
+                                y=tabla_formateada.columns.tolist()[:10],
+                                barmode='group',
+                                title=f"{funcion_agg} de {', '.join(valores_pivot)}"
+                            )
+                        else:
+                            fig = px.bar(
+                                tabla_formateada.reset_index(),
+                                x=filas_pivot[0] if len(filas_pivot) == 1 else tabla_formateada.reset_index().columns[0],
+                                y=valores_pivot[0] if len(valores_pivot) == 1 else valores_pivot,
+                                title=f"{funcion_agg} de {', '.join(valores_pivot)}"
+                            )
+
+                        fig.update_layout(template="plotly_white", height=400)
+                        st.plotly_chart(fig, use_container_width=True)
+                    except:
+                        st.caption("💡 No se pudo generar el gráfico automático.")
+
+                except Exception as e:
+                    st.error(f"❌ Error al generar tabla: {str(e)}")
+
+    # Columna derecha: datos en tiempo real
+    with col_piv_data:
+        st.markdown("#### 📊 Datos en Tiempo Real")
+        m1, m2 = st.columns(2)
+        m1.metric("Filas", len(st.session_state.df))
+        m2.metric("Columnas", len(st.session_state.df.columns))
+        st.dataframe(st.session_state.df, use_container_width=True, height=480)
+        nombre_archivo_p = st.session_state.filename.replace('.xlsx', '_modificado.xlsx') if st.session_state.filename else 'datos_modificados.xlsx'
+        st.download_button(
+            "📥 Exportar Excel Modificado",
+            data=exportar_excel(),
+            file_name=nombre_archivo_p,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key=f"dl_piv_{len(st.session_state.df.columns)}_{len(st.session_state.df)}",
+            use_container_width=True
+        )
 
 # ============================================================================
 # PESTAÑA 5: CHAT IA (Vista dividida: Chat + Datos en tiempo real)
