@@ -80,6 +80,28 @@ st.markdown("""
     .ia-gemini { background-color: #e3f2fd; color: #1565c0; }
     .ia-claude { background-color: #fce4d6; color: #8b4513; }
     .ia-comandos { background-color: #fff3e0; color: #ef6c00; }
+
+    /* Mejoras para iPad/móvil - Apple Pencil y táctil */
+    @media (pointer: coarse), (hover: none) {
+        /* Botones más grandes en móvil */
+        .stButton button {
+            min-height: 48px;
+            font-size: 16px;
+        }
+        /* Inputs más grandes para evitar zoom automático en iOS */
+        input, textarea, select {
+            font-size: 16px !important;
+        }
+        /* Mejor área táctil para las celdas de la tabla */
+        .stDataFrame td, .stDataFrame th {
+            padding: 10px 8px !important;
+            touch-action: manipulation;
+        }
+        /* Desactivar doble-tap zoom en tablas */
+        .stDataFrame {
+            touch-action: pan-x pan-y;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -848,18 +870,32 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["📝 Editar Datos", "🧮 Fórmulas", "
 # ============================================================================
 with tab1:
     st.subheader("Editor de Datos")
-    st.caption("Haz clic en cualquier celda para editarla")
-    
-    df_editado = st.data_editor(
-        st.session_state.df,
-        use_container_width=True,
-        num_rows="dynamic",
-        height=500
-    )
-    
-    if not df_editado.equals(st.session_state.df):
-        st.session_state.df = df_editado
-        st.toast("✏️ Datos actualizados", icon="✅")
+
+    # Toggle para modo edición (evita teclado en móvil)
+    if 'edit_mode' not in st.session_state:
+        st.session_state.edit_mode = False
+
+    st.session_state.edit_mode = st.toggle("Activar edición", value=st.session_state.edit_mode,
+                                            help="Desactiva para ver datos sin que salte el teclado en iPad/móvil")
+
+    if st.session_state.edit_mode:
+        st.caption("Modo edición: toca una celda para editarla")
+        df_editado = st.data_editor(
+            st.session_state.df,
+            use_container_width=True,
+            num_rows="dynamic",
+            height=500
+        )
+        if not df_editado.equals(st.session_state.df):
+            st.session_state.df = df_editado
+            st.toast("✏️ Datos actualizados", icon="✅")
+    else:
+        st.caption("Modo lectura: activa la edición arriba para modificar celdas")
+        st.dataframe(
+            st.session_state.df,
+            use_container_width=True,
+            height=500
+        )
 
 # ============================================================================
 # PESTAÑA 2: FÓRMULAS
