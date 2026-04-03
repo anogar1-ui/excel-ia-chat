@@ -1460,26 +1460,52 @@ with tab5:
         st.subheader("⌨️ Modo Comandos")
         st.caption("Usa comandos estructurados (suma, resta, filtra, ordena...) — los cambios se reflejan en tiempo real a la derecha")
     
+    # ==================== INPUT DE CHAT (ARRIBA) ====================
+    placeholder = "Ejemplo: ¿Cuál es el promedio de ventas?" if provider != "Comandos" else "Ejemplo: suma 10 a Precio"
+    comando = st.chat_input(placeholder)
+
+    if comando:
+        st.session_state.chat_history.append({'rol': 'usuario', 'texto': comando})
+
+        with st.spinner("Pensando..."):
+            respuesta, hubo_cambios = procesar_mensaje_ia(comando)
+
+        st.session_state.chat_history.append({'rol': 'asistente', 'texto': respuesta})
+        st.rerun()
+
+    # Botones de acción
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 2])
+    with col_btn1:
+        if st.session_state.chat_history:
+            if st.button("🗑️ Limpiar chat"):
+                st.session_state.chat_history = []
+                st.rerun()
+    with col_btn2:
+        if st.session_state.historial_cambios:
+            if st.button("↩️ Deshacer último"):
+                if len(st.session_state.historial_cambios) > 0:
+                    ultimo = st.session_state.historial_cambios.pop()
+                    st.session_state.df = ultimo['df_copia']
+                    st.toast(f"↩️ Deshecho: {ultimo['descripcion']}", icon="↩️")
+                    st.rerun()
+
     # ---- Layout dividido: Chat (izquierda) | Datos en tiempo real (derecha) ----
     col_chat, col_datos = st.columns([3, 2])
-    
+
     # ==================== COLUMNA DERECHA: DATOS EN TIEMPO REAL ====================
     with col_datos:
         st.markdown("#### 📊 Datos en Tiempo Real")
-        
-        # Métricas rápidas
+
         m1, m2 = st.columns(2)
         m1.metric("Filas", len(st.session_state.df))
         m2.metric("Columnas", len(st.session_state.df.columns))
-        
-        # Tabla de datos siempre visible
+
         st.dataframe(
             st.session_state.df,
             use_container_width=True,
             height=420
         )
-        
-        # Info de columnas compacta
+
         with st.expander("🔍 Detalle de columnas", expanded=False):
             for col in st.session_state.df.columns:
                 tipo = str(st.session_state.df[col].dtype)
@@ -1490,14 +1516,12 @@ with tab5:
                 else:
                     icono = "📝"
                 st.caption(f"{icono} **{col}** ({tipo})")
-        
-        # Historial de cambios recientes
+
         if st.session_state.historial_cambios:
             with st.expander(f"📝 Últimos cambios ({len(st.session_state.historial_cambios)})", expanded=False):
                 for cambio in st.session_state.historial_cambios[-5:]:
                     st.caption(f"• {cambio['descripcion']}")
-        
-        # Exportar Excel
+
         nombre_archivo = st.session_state.filename.replace('.xlsx', '_modificado.xlsx') if st.session_state.filename else 'datos_modificados.xlsx'
         st.download_button(
             "📥 Exportar Excel Modificado",
@@ -1507,54 +1531,22 @@ with tab5:
             key=f"download_{len(st.session_state.df.columns)}_{len(st.session_state.df)}",
             use_container_width=True
         )
-    
-    # ==================== COLUMNA IZQUIERDA: CHAT ====================
+
+    # ==================== COLUMNA IZQUIERDA: HISTORIAL CHAT ====================
     with col_chat:
-        # Contenedor con scroll para el historial
         chat_container = st.container(height=500)
-        
+
         with chat_container:
             if not st.session_state.chat_history:
-                st.info("💬 Escribe un mensaje abajo para empezar a interactuar con tus datos.")
-            
+                st.info("💬 Escribe un mensaje arriba para empezar a interactuar con tus datos.")
+
             for mensaje in st.session_state.chat_history:
                 if mensaje['rol'] == 'usuario':
-                    st.markdown(f"<div class='chat-user'>👤 **Tú:** {mensaje['texto']}</div>", 
+                    st.markdown(f"<div class='chat-user'>👤 **Tú:** {mensaje['texto']}</div>",
                                unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<div class='chat-bot'>🤖 **Asistente:** {mensaje['texto']}</div>", 
+                    st.markdown(f"<div class='chat-bot'>🤖 **Asistente:** {mensaje['texto']}</div>",
                                unsafe_allow_html=True)
-        
-        # Input de chat
-        placeholder = "Ejemplo: ¿Cuál es el promedio de ventas?" if provider != "Comandos" else "Ejemplo: suma 10 a Precio"
-        comando = st.chat_input(placeholder)
-        
-        if comando:
-            st.session_state.chat_history.append({'rol': 'usuario', 'texto': comando})
-            
-            with st.spinner("Pensando..."):
-                respuesta, hubo_cambios = procesar_mensaje_ia(comando)
-            
-            st.session_state.chat_history.append({'rol': 'asistente', 'texto': respuesta})
-            
-            # Rerun para actualizar tanto el chat como la tabla de datos
-            st.rerun()
-        
-        # Botones de acción
-        col_btn1, col_btn2 = st.columns([1, 1])
-        with col_btn1:
-            if st.session_state.chat_history:
-                if st.button("🗑️ Limpiar chat"):
-                    st.session_state.chat_history = []
-                    st.rerun()
-        with col_btn2:
-            if st.session_state.historial_cambios:
-                if st.button("↩️ Deshacer último"):
-                    if len(st.session_state.historial_cambios) > 0:
-                        ultimo = st.session_state.historial_cambios.pop()
-                        st.session_state.df = ultimo['df_copia']
-                        st.toast(f"↩️ Deshecho: {ultimo['descripcion']}", icon="↩️")
-                        st.rerun()
         
         # Ejemplos
         with st.expander("💡 Ejemplos de preguntas" if provider != "Comandos" else "💡 Comandos disponibles"):
