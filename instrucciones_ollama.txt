@@ -1,0 +1,76 @@
+================================================================================
+GUÍA COMPLETA: CÓMO USAR OLLAMA EN EXCEL (EXTENSIÓN VBA)
+================================================================================
+
+Sigue estos pasos en orden para poder interactuar con Ollama desde tu hoja de cálculo.
+
+--------------------------------------------------------------------------------
+PARTE 1: INICIAR EL SERVIDOR (SOLO LA PRIMERA VEZ O SI REINICIAS EL PC)
+--------------------------------------------------------------------------------
+
+1. Ve a la carpeta de tu proyecto:
+   C:\Users\Propietario\Desktop\PROYECTOS\excellll\excel_extension\
+
+2. Haz **doble clic** en el archivo:
+   run_excel_api.bat
+
+3. Se abrirá una ventana de comandos (pantalla negra). Esta ventana:
+   - Activa el entorno virtual de Python.
+   - Enciende Ollama automáticamente si estaba apagado.
+   - Muestra el mensaje: "API corriendo en: http://localhost:5050"
+
+4. **IMPORTANTE:** ¡Deja esa ventana negra abierta mientras uses Excel! No la cierres.
+
+
+--------------------------------------------------------------------------------
+PARTE 2: CONFIGURAR EXCEL (SOLO HAY QUE HACERLO UNA VEZ)
+--------------------------------------------------------------------------------
+
+Para que Excel te permita usar la Inteligencia Artificial para modificar tu hoja, debes darle permisos.
+
+1. Abre Excel.
+2. Ve a la pestaña **Archivo** > **Opciones**.
+3. A la izquierda, selecciona **Centro de confianza**.
+4. Haz clic en el botón **Configuración del Centro de confianza...**.
+5. A la izquierda, ve a **Configuración de macros**.
+6. Selecciona: "Habilitar todas las macros".
+7. **PASO CRÍTICO:** En esa misma pantalla, marca la casilla que dice:
+   [X] "Confiar en el acceso al modelo de objetos de proyectos de VBA"
+8. Haz clic en Aceptar en todas las ventanas.
+
+
+--------------------------------------------------------------------------------
+PARTE 3: CARGAR LA MACRO EN TU ARCHIVO (CADA VEZ QUE CREES UN EXCEL NUEVO)
+--------------------------------------------------------------------------------
+
+Excel necesita "aprender" el código para conectarse con Ollama.
+
+1. Abre tu archivo de Excel donde quieras usar la IA.
+2. Presiona las teclas **Alt + F11** (esto abre el editor de código).
+3. Arriba, ve al menú **Archivo** > **Importar archivo...** (o Ctrl+M).
+4. Navega hasta:
+   C:\Users\Propietario\Desktop\PROYECTOS\excellll\excel_extension\
+5. Selecciona el archivo **ExcelOllama.bas** y dale a Abrir.
+6. Cierra la ventana del editor de código (puedes darle a la X).
+7. Para no perder esto, guarda tu archivo de Excel como:
+   "Libro de Excel habilitado para macros (*.xlsm)"
+
+
+--------------------------------------------------------------------------------
+PARTE 4: ¡USAR OLLAMA!
+--------------------------------------------------------------------------------
+
+1. En tu archivo de Excel (ya con la macro cargada y el servidor funcionando), presiona:
+   **Alt + F8**
+
+2. En la lista aparecerá "MostrarChatOllama" (o "OllamaIA.MostrarChatOllama").
+3. Selecciónalo y dale al botón **Ejecutar**.
+4. Aparecerá un cuadro en el centro de la pantalla.
+5. Escribe lo que quieres que haga, por ejemplo:
+   - "Suma 10 a la columna B"
+   - "Pon en rojo las celdas de la columna A que sean mayores a 50"
+   - "Ordena la tabla por la columna C"
+6. Dale a Aceptar. Abajo a la izquierda dirá "Ollama pensando...".
+7. Si Ollama generó código para modificar tu tabla, te preguntará si quieres ejecutarlo. Dile que Sí.
+
+Para salir del chat, simplemente escribe la palabra "salir" o deja el cuadro en blanco y presiona Aceptar.

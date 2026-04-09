@@ -38,6 +38,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# PWA: metadatos para añadir a pantalla de inicio sin barra de navegacion
+st.markdown("""
+<link rel="manifest" href="/app/static/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Excel IA">
+<meta name="theme-color" content="#217346">
+""", unsafe_allow_html=True)
+
 # Estilos CSS personalizados
 st.markdown("""
 <style>
